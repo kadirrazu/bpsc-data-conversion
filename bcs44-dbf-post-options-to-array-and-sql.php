@@ -1,19 +1,43 @@
 <?php
 
-// ---------------- CONFIG ----------------
+/***********************************
+* CONFIGURATION SECTION
+***********************************/
+
+//Input DBF File
 $dbf_file = __DIR__ . '\file-to-convert\bcs_option44.DBF';
 
+//Output SQL File for 'cadres' table
+$cadres_sql_out_file      = __DIR__ . '/conversion-output/dbf-to-file/cadres/cadres_sql_bcs44.sql';
+
+//Output SQL File for 'posts' table
+$posts_sql_out_file       = __DIR__ . '/conversion-output/dbf-to-file/posts/posts_sql_bcs44.sql';
+
+//Output PHP-ARRAY File for 'cadres'
+$cadres_php_array_file    = __DIR__ . '/conversion-output/dbf-to-file/cadres/cadres_array_bcs44.php';
+
+//Output PHP-ARRAY File for 'posts'
+$posts_php_array_file     = __DIR__ . '/conversion-output/dbf-to-file/posts/posts_array_bcs44.php';
+
+//MySQL Table Names
 $cadres_table = "cadres";
+
 $posts_table  = "posts";
 
+//Encoding of DBF File
+$encoding = 'CP1252';
+
+//Fields of DBF File, for CADRES
 $select_fields_cadres = [
     'OPT_CODE', 'OPT_DESC', 'P_NAME', 'CADRE'
 ];
 
+//Fields of DBF File, for POSTS
 $select_fields_posts = [
     'OPT_CODE', 'POST_NO', 'MERIT', 'FF_QUOTA', 'EM_QUOTA', 'PHC_QUOTA'
 ];
 
+//Mapping of DBF File Fields to My-SQL Table Columns; for CADRES
 $field_map_cadres = [
     'OPT_CODE' => 'cadre_code',
     'OPT_DESC' => 'cadre_abbr',
@@ -21,6 +45,7 @@ $field_map_cadres = [
     'CADRE'    => 'cadre_type',
 ];
 
+//Mapping of DBF File Fields to My-SQL Table Columns; for POSTS
 $field_map_posts = [
     'OPT_CODE'  => ['cadre_code'],
     'POST_NO'   => ['total_post', 'total_post_left'],
@@ -30,39 +55,41 @@ $field_map_posts = [
     'PHC_QUOTA' => ['phc_post', 'phc_post_left'],
 ];
 
-$encoding = 'CP1252';
 
-$cadres_sql_out_file      = __DIR__ . '/conversion-output/dbf-to-file/output_cadres_sql_bcs44.sql';
-$posts_sql_out_file       = __DIR__ . '/conversion-output/dbf-to-file/output_posts_sql_bcs44.sql';
-$cadres_php_array_file    = __DIR__ . '/conversion-output/dbf-to-file/output_cadres_array_bcs44.php';
-$posts_php_array_file     = __DIR__ . '/conversion-output/dbf-to-file/output_posts_array_bcs44.php';
-
-
-// ---------------- FUNCTIONS ----------------
+/***********************************
+* CUSTOM FUNCTIONS
+***********************************/
 
 function parse_dbf_file(string $path, string $encoding) : array {
 
-    if (!file_exists($path)) {
+    if( !file_exists($path) )
+    {
         throw new RuntimeException("DBF not found: $path");
     }
 
     $fp = fopen($path, 'rb');
-    if (!$fp) throw new RuntimeException("Cannot open DBF");
 
-    // header
+    if( !$fp ) throw new RuntimeException("Cannot open DBF");
+
+    //Header
     $header = fread($fp, 32);
+
     $num_records   = unpack("V", substr($header, 4, 4))[1];
     $header_length = unpack("v", substr($header, 8, 2))[1];
     $record_length = unpack("v", substr($header, 10, 2))[1];
 
-    // fields
+    //Fields
     $fields = [];
+
     fseek($fp, 32);
 
-    while (true) {
+    while( true )
+    {
         $desc = fread($fp, 32);
-        if (strlen($desc) === 0) break;
-        if (ord($desc[0]) === 0x0D) break;
+
+        if( strlen($desc) === 0 ) break;
+
+        if( ord($desc[0]) === 0x0D ) break;
 
         $fields[] = [
             'name'   => rtrim(substr($desc, 0, 11), "\x00 "),
@@ -75,75 +102,102 @@ function parse_dbf_file(string $path, string $encoding) : array {
 
     $rows = [];
 
-    for ($i = 0; $i < $num_records; $i++) {
+    for( $i = 0; $i < $num_records; $i++ )
+    {
 
         $raw = fread($fp, $record_length);
+
         if (!$raw) break;
 
         if ($raw[0] === '*') continue; // deleted record
 
         $pos = 1;
+
         $row = [];
 
-        foreach ($fields as $f) {
+        foreach( $fields as $f )
+        {
 
-            $val = rtrim(substr($raw, $pos, $f['length']), "\x00 \t\r\n");
+            $val = rtrim( substr($raw, $pos, $f['length']), "\x00 \t\r\n" );
 
-            if ($encoding !== 'UTF-8') {
+            if( $encoding !== 'UTF-8' )
+            {
                 $converted = @iconv($encoding, 'UTF-8//IGNORE', $val);
+
                 if ($converted !== false) $val = $converted;
             }
 
             $row[$f['name']] = trim($val);
+
             $pos += $f['length'];
         }
 
         $rows[] = $row;
+
     }
 
     fclose($fp);
+
     return $rows;
-}
+
+} //End of function 'parse_dbf_file()'
+
 
 function map_fields_simple(array $rows, array $map) : array {
-    $out = [];
-    foreach ($rows as $r) {
-        $item = [];
-        foreach ($map as $from => $to) {
 
-            $val = trim($r[$from] ?? '') ?: null;
+    $out = [];
+
+    foreach( $rows as $r )
+    {
+        $item = [];
+
+        foreach( $map as $from => $to )
+        {
+
+            $val = trim( $r[$from] ?? '' ) ?: null;
 
             // Convert cadre_code to integer
-            if ($to === 'cadre_code') {
+            if( $to === 'cadre_code' )
+            {
                 $item[$to] = $val !== null ? (int)$val : null;
-            } else {
+            }
+            else
+            {
                 $item[$to] = $val;
             }
         }
+
         $out[] = $item;
+
     }
+
     return $out;
-}
+
+}  //End of function 'map_fields_simple()'
 
 
 function map_fields_multi(array $rows, array $map) : array {
 
     $out = [];
 
-    foreach ($rows as $r) {
+    foreach( $rows as $r )
+    {
 
         $item = [];
 
-        foreach ($map as $from => $targets) {
+        foreach( $map as $from => $targets )
+        {
 
-            $value = trim($r[$from] ?? '');
+            $value = trim( $r[$from] ?? '' );
 
-            foreach ($targets as $field) {
+            foreach( $targets as $field )
+            {
                 $item[$field] = $value;
             }
+
         }
 
-        // convert numeric fields safely
+        //Convert numeric fields safely
         $numeric_fields = [
             'total_post','total_post_left',
             'mq_post','mq_post_left',
@@ -152,26 +206,37 @@ function map_fields_multi(array $rows, array $map) : array {
             'phc_post','phc_post_left'
         ];
 
-        foreach ($numeric_fields as $nf) {
+        foreach( $numeric_fields as $nf )
+        {
 
-            $val = trim((string)($item[$nf] ?? ''));
+            $val = trim( (string)($item[$nf] ?? '') );
 
-            if ($val === '' || $val === null) {
+            if( $val === '' || $val === null )
+            {
                 $item[$nf] = 0;
-            } else {
+            }
+            else
+            {
                 $item[$nf] = (int)$val;
             }
+
         }
 
         $out[] = $item;
+
     }
 
     return $out;
-}
 
-function generate_sql_inserts($table, $rows) {
+}  //End of function 'map_fields_multi()'
+
+function generate_sql_inserts($table, $rows)
+{
     $sql = "";
-    foreach ($rows as $r) {
+
+    foreach( $rows as $r )
+    {
+
         $cols = "`" . implode("`,`", array_keys($r)) . "`";
 
         $vals = array_map(function($v) {
@@ -179,14 +244,21 @@ function generate_sql_inserts($table, $rows) {
         }, array_values($r));
 
         $sql .= "INSERT INTO `$table` ($cols) VALUES (" . implode(",", $vals) . ");\n";
-    }
-    return $sql;
-}
 
-function write_php_array_file($path, $rows) {
+    }
+
+    return $sql;
+    
+}  //End of function 'generate_sql_inserts()'
+
+function write_php_array_file($path, $rows)
+{
+
     $content = "<?php\nreturn " . var_export($rows, true) . ";\n";
+
     file_put_contents($path, $content);
-}
+
+}  //End of function 'write_php_array_file()'
 
 
 // ---------------- RUN ----------------
@@ -213,6 +285,8 @@ try {
     echo "Done.<br><br>";
 
 } catch (Exception $e) {
+
     echo "ERROR: " . $e->getMessage();
-}
+
+} //End of Try-Catch Block
 
