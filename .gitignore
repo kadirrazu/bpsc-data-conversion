@@ -1,8 +1,8 @@
 file-io/file-to-convert/for-result/*
 file-io/file-to-convert/for-statistics/*
 
-file-io/file-output/dbf-to-file/bcs-result/posts/*
-file-io/file-output/dbf-to-file/bcs-result/candidates/*
-file-io/file-output/dbf-to-file/bcs-result/cadres/*
+file-io/file-output/dbf-to-file/bcs-result/**/posts/*
+file-io/file-output/dbf-to-file/bcs-result/**/candidates/*
+file-io/file-output/dbf-to-file/bcs-result/**/cadres/*
 
-file-io/file-output/dbf-to-file/bcs-statistics/*
+file-io/file-output/dbf-to-file/bcs-statistics/bcs48/*

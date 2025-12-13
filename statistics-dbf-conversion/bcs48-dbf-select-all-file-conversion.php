@@ -5,22 +5,24 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\file-to-convert\reg_all_bcs48.DBF';
+$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-statistics\select_all_bcs48.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/conversion-output/sql_reg_all_bcs48.sql';
-$php_array_output_file = __DIR__ . '/conversion-output/array_reg_all_bcs48.php';
+$sql_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/sql_select_all_bcs48.sql';
+
+$php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/array_select_all_bcs48.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "registrations";
+$table_name = "results";
 
 //Fields of DBF File
 $select_fields = [
     'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE', 'DIST_NAME', 
 	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR', 'DIV_CODE', 'DIV_NAME',
+	'MERIT_GEN', 'P_F', 'POST_NAME',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -39,6 +41,9 @@ $field_map = [
     'G_YEAR' => 'graduation_year',
     'DIV_CODE' => 'division_code',
 	'DIV_NAME' => 'division_name',
+	'MERIT_GEN' => 'merit_gen',
+	'P_F' => 'p_f',
+	'POST_NAME' => 'post_name',
 ];
 
 

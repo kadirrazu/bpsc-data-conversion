@@ -5,19 +5,19 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\file-to-convert\bcs_option44.DBF';
+$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-result\bcs_option44.DBF';
 
 //Output SQL File for 'cadres' table
-$cadres_sql_out_file      = __DIR__ . '/conversion-output/dbf-to-file/cadres/cadres_sql_bcs44.sql';
+$cadres_sql_out_file      = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs44/cadres/cadres_sql_bcs44.sql';
 
 //Output SQL File for 'posts' table
-$posts_sql_out_file       = __DIR__ . '/conversion-output/dbf-to-file/posts/posts_sql_bcs44.sql';
+$posts_sql_out_file       = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs44/posts/posts_sql_bcs44.sql';
 
 //Output PHP-ARRAY File for 'cadres'
-$cadres_php_array_file    = __DIR__ . '/conversion-output/dbf-to-file/cadres/cadres_array_bcs44.php';
+$cadres_php_array_file    = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs44/cadres/cadres_array_bcs44.php';
 
 //Output PHP-ARRAY File for 'posts'
-$posts_php_array_file     = __DIR__ . '/conversion-output/dbf-to-file/posts/posts_array_bcs44.php';
+$posts_php_array_file     = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs44/posts/posts_array_bcs44.php';
 
 //MySQL Table Names
 $cadres_table = "cadres";

@@ -5,13 +5,13 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\file-to-convert\tab_fin_bcs44.DBF';
+$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-result\tab_fin_bcs44.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/conversion-output/dbf-to-file/candidates/candidates_sql_bcs44.sql';
+$sql_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs44/candidates/candidates_sql_bcs44.sql';
 
 //Output PHP-ARRAY File
-$php_array_output_file = __DIR__ . '/conversion-output/dbf-to-file/candidates/candidates_array_bcs44.php';
+$php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs44/candidates/candidates_array_bcs44.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
