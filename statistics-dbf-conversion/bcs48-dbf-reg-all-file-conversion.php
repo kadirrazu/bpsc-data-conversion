@@ -20,8 +20,8 @@ $table_name = "registrations";
 
 //Fields of DBF File
 $select_fields = [
-    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE', 'DIST_NAME', 
-	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR', 'DIV_CODE', 'DIV_NAME',
+    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE', 
+	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR', 'DIV_CODE',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -33,13 +33,11 @@ $field_map = [
     'DOB' => 'dob',
     'B_DATE' => 'dob_ddmmyyyy',
     'DIST_CODE' => 'district_code',
-    'DIST_NAME' => 'district_name',
     'B_SUBJECT' => 'b_subject',
     'G_INSTITUT' => 'g_inst_code',
     'G_INSTITU2' => 'g_inst_name',
     'G_YEAR' => 'graduation_year',
     'DIV_CODE' => 'division_code',
-	'DIV_NAME' => 'division_name',
 ];
 
 
@@ -100,17 +98,44 @@ function parse_dbf_file(string $path, array $select_fields, string $encoding) : 
 
         foreach( $fields as $f )
         {
-            $val = rtrim( substr($raw, $pos, $f['length']), "\x00 \t\r\n" );
 
-            //Encoding convert
-            if( $encoding !== 'UTF-8' )
-            {
-                $converted = @iconv( $encoding, 'UTF-8//IGNORE', $val );
-                if( $converted !== false ) $val = $converted;
+            $rawVal = substr($raw, $pos, $f['length']);
+
+            switch ($f['type']) {
+
+                // Character fields
+                case 'C':
+                    $val = rtrim($rawVal, "\x00 \t\r\n");
+                    if ($encoding !== 'UTF-8') {
+                        $converted = @iconv($encoding, 'UTF-8//IGNORE', $val);
+                        if ($converted !== false) $val = $converted;
+                    }
+                    $row[$f['name']] = trim($val);
+                    break;
+
+                // Numeric fields (ASCII)
+                case 'N':
+                case 'F':
+                    $val = trim($rawVal);
+                    $row[$f['name']] = ($val === '') ? null : $val;
+                    break;
+
+                // Integer fields (BINARY!)
+                case 'I':
+                    $row[$f['name']] = unpack('V', $rawVal)[1]; // unsigned little-endian 32-bit
+                    break;
+
+                // Currency
+                case 'Y':
+                    $row[$f['name']] = unpack('q', $rawVal)[1] / 10000;
+                    break;
+
+                default:
+                    $row[$f['name']] = trim($rawVal);
             }
 
-            $row[$f['name']] = trim($val);
             $pos += $f['length'];
+
         }
 
         // filter selected fields
@@ -162,9 +187,11 @@ function generate_sql_inserts( $table, $rows )
     {
         $cols = "`" . implode("`,`", array_keys($r)) . "`";
 
-        $vals = array_map(fn($v) =>
-            $v === null ? "NULL" : "'" . str_replace("'", "''", $v) . "'",
-        array_values($r));
+        $vals = array_map(function($v) {
+            if ($v === null) return "NULL";
+            if (is_int($v) || is_float($v)) return $v;
+            return "'" . str_replace("'", "''", $v) . "'";
+        }, array_values($r));
 
         $sql .= "INSERT INTO `$table` ($cols) VALUES (" . implode(",", $vals) . ");\n";
     }
@@ -172,6 +199,59 @@ function generate_sql_inserts( $table, $rows )
     return $sql;
 
 } //Enf of function 'generate_sql_inserts()'
+
+
+function generate_sql_inserts_batch(string $table, array $rows, int $batchSize = 1000) : string {
+
+    if (empty($rows)) return '';
+
+    $sql = '';
+    $columns = array_keys($rows[0]);
+    $colSql = "`" . implode("`,`", $columns) . "`";
+
+    $batch = [];
+    $count = 0;
+
+    foreach( $rows as $row )
+    {
+
+        $values = [];
+
+        foreach ($columns as $col) 
+        {
+            $v = $row[$col] ?? null;
+
+            if ($v === null) {
+                $values[] = "NULL";
+            } elseif (is_int($v) || is_float($v)) {
+                $values[] = $v;
+            } else {
+                $values[] = "'" . str_replace("'", "''", $v) . "'";
+            }
+        }
+
+        $batch[] = "(" . implode(",", $values) . ")";
+        $count++;
+
+        if ($count % $batchSize === 0) {
+            $sql .= "INSERT INTO `$table` ($colSql) VALUES\n"
+                 . implode(",\n", $batch)
+                 . ";\n\n";
+            $batch = [];
+        }
+
+    }
+
+    // Flush remaining rows
+    if (!empty($batch)) {
+        $sql .= "INSERT INTO `$table` ($colSql) VALUES\n"
+             . implode(",\n", $batch)
+             . ";\n\n";
+    }
+
+    return $sql;
+}
+
 
 function write_php_array_file( $path, $rows )
 {
@@ -193,8 +273,40 @@ try {
     echo "Mapping fields...<br><br>";
     $mapped = map_fields($raw, $field_map);
 
+    //Convert some field to integer
+    $int_fields = [
+        'reg',
+        'gender',
+        'district_code',
+        'b_subject',
+        'g_inst_code',
+        'graduation_year',
+        'division_code',
+    ];
+
+    foreach ($mapped as &$row) {
+        foreach ($int_fields as $f) {
+            if (
+                isset($row[$f]) &&
+                $row[$f] !== null &&
+                $row[$f] !== '' &&
+                is_numeric($row[$f])
+            ) {
+                $row[$f] = (int)$row[$f];
+            } else {
+                $row[$f] = null;
+            }
+        }
+    }
+
+    unset( $row );
+
     echo "Writing SQL...<br><br>";
-    file_put_contents($sql_output_file, generate_sql_inserts($table_name, $mapped));
+    //file_put_contents($sql_output_file, generate_sql_inserts($table_name, $mapped));
+    file_put_contents(
+        $sql_output_file,
+        generate_sql_inserts_batch($table_name, $mapped, 1000)
+    );
 
     echo "Writing PHP array...<br><br>";
     write_php_array_file($php_array_output_file, $mapped);
