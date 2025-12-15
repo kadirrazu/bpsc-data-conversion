@@ -22,7 +22,7 @@ $table_name = "results";
 $select_fields = [
     'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
 	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR', 'DIV_CODE',
-	'MERIT_GEN', 'P_F', 'POST_NAME',
+	'CAT', 'MERIT_GEN', 'P_F', 'POST_NAME',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -39,6 +39,7 @@ $field_map = [
     'G_INSTITU2' => 'g_inst_name',
     'G_YEAR' => 'graduation_year',
     'DIV_CODE' => 'division_code',
+    'CAT' => 'cadre_category',
 	'MERIT_GEN' => 'merit_gen',
 	'P_F' => 'p_f',
 	'POST_NAME' => 'post_name',
