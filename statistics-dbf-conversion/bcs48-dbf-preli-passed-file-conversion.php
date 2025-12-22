@@ -20,7 +20,8 @@ $table_name = "preli_passed";
 
 //Fields of DBF File
 $select_fields = [
-    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE', 'DIST_NAME', 'B_SUBJECT'
+    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
+	'B_SUBJECT', 'G_INSTITUT', 'G_INSTITU2', 'G_YEAR',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -32,8 +33,10 @@ $field_map = [
     'DOB' => 'dob',
     'B_DATE' => 'dob_ddmmyyyy',
     'DIST_CODE' => 'district_code',
-    'DIST_NAME' => 'district_name',
     'B_SUBJECT' => 'b_subject',
+    'G_INSTITUT' => 'g_inst_code',
+    'G_INSTITU2' => 'g_inst_name',
+    'G_YEAR' => 'graduation_year',
 ];
 
 
@@ -275,6 +278,8 @@ try {
         'gender',
         'district_code',
         'b_subject',
+        'g_inst_code',
+        'graduation_year',
     ];
 
     foreach ($mapped as &$row) {

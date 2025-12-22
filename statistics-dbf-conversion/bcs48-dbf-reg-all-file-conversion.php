@@ -20,8 +20,8 @@ $table_name = "registrations";
 
 //Fields of DBF File
 $select_fields = [
-    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE', 
-	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR', 'DIV_CODE',
+    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
+	'B_SUBJECT', 'G_INSTITUT', 'G_INSTITU2', 'G_YEAR',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -37,7 +37,6 @@ $field_map = [
     'G_INSTITUT' => 'g_inst_code',
     'G_INSTITU2' => 'g_inst_name',
     'G_YEAR' => 'graduation_year',
-    'DIV_CODE' => 'division_code',
 ];
 
 
@@ -281,7 +280,6 @@ try {
         'b_subject',
         'g_inst_code',
         'graduation_year',
-        'division_code',
     ];
 
     foreach ($mapped as &$row) {

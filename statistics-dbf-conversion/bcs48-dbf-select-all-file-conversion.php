@@ -16,13 +16,13 @@ $php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-stat
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "results";
+$table_name = "final_result";
 
 //Fields of DBF File
 $select_fields = [
     'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
-	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR', 'DIV_CODE',
-	'CAT', 'MERIT_GEN', 'P_F', 'POST_NAME',
+	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR',
+	'CAT', 'MERIT_GEN', 'P_F', 'POST_NAME', 'QUOTA',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -38,11 +38,11 @@ $field_map = [
     'G_INSTITUT' => 'g_inst_code',
     'G_INSTITU2' => 'g_inst_name',
     'G_YEAR' => 'graduation_year',
-    'DIV_CODE' => 'division_code',
     'CAT' => 'cadre_category',
 	'MERIT_GEN' => 'merit_gen',
 	'P_F' => 'p_f',
 	'POST_NAME' => 'post_name',
+	'QUOTA' => 'quota_status',
 ];
 
 
@@ -286,7 +286,6 @@ try {
         'b_subject',
         'g_inst_code',
         'graduation_year',
-        'division_code',
     ];
 
     foreach ($mapped as &$row) {
