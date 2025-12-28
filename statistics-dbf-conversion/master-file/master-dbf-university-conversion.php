@@ -5,28 +5,28 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-statistics\bachelor_sub_all.DBF';
+$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\university.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/sql_subjects.sql';
+$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/sql_university.sql';
 
-$php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/array_subjects.php';
+$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/array_university.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "subjects";
+$table_name = "institutes";
 
 //Fields of DBF File
 $select_fields = [
-    'SUB_CODE', 'SUB_NAME',
+    'UNI_CODE', 'UNI_NAME',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
 $field_map = [
-    'SUB_CODE' => 'code',
-	'SUB_NAME' => 'name',
+    'UNI_CODE' => 'code',
+	'UNI_NAME' => 'name',
 ];
 
 

@@ -5,12 +5,12 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-statistics\district.DBF';
+$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\district.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/sql_districts.sql';
+$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/sql_districts.sql';
 
-$php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/array_districts.php';
+$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/array_districts.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';

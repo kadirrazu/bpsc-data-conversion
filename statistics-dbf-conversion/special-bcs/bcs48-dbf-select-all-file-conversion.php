@@ -1,0 +1,324 @@
+<?php
+
+/***********************************
+* CONFIGURATION SECTION
+***********************************/
+
+//Input DBF File
+$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\select_all_bcs48.DBF';
+
+//Output SQL-INSERT File
+$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/sql_select_all_bcs48.sql';
+
+$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/array_select_all_bcs48.php';
+
+//Encoding of DBF File
+$encoding = 'CP1252';
+
+//Table name
+$table_name = "final_result";
+
+//Fields of DBF File
+$select_fields = [
+    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
+	'B_SUBJECT','G_INSTITUT', 'G_INSTITU2', 'G_YEAR',
+	'CAT', 'MERIT_GEN', 'P_F', 'POST_NAME', 'QUOTA',
+];
+
+//Mapping of DBF File Fields to My-SQL Table Columns
+$field_map = [
+    'USER' => 'user_id',
+	'REG' => 'reg',
+    'NAME' => 'name',
+	'SEX' => 'gender',
+    'DOB' => 'dob',
+    'B_DATE' => 'dob_ddmmyyyy',
+    'DIST_CODE' => 'district_code',
+    'B_SUBJECT' => 'b_subject',
+    'G_INSTITUT' => 'g_inst_code',
+    'G_INSTITU2' => 'g_inst_name',
+    'G_YEAR' => 'graduation_year',
+    'CAT' => 'cadre_category',
+	'MERIT_GEN' => 'merit_gen',
+	'P_F' => 'p_f',
+	'POST_NAME' => 'post_name',
+	'QUOTA' => 'quota_status',
+];
+
+
+/***********************************
+* CUSTOM FUNCTIONS
+***********************************/
+
+function parse_dbf_file(string $path, array $select_fields, string $encoding) : array {
+
+    if (!file_exists($path)) throw new RuntimeException("File not found: $path");
+
+    $fp = fopen($path, 'rb');
+
+    if( !$fp ) throw new RuntimeException("Cannot open DBF");
+
+    //Header
+    $header = fread($fp, 32);
+
+    $num_records = unpack("V", substr($header, 4, 4))[1];
+    $header_length = unpack("v", substr($header, 8, 2))[1];
+    $record_length = unpack("v", substr($header, 10, 2))[1];
+
+    //Read field descriptors
+    $fields = [];
+
+    fseek($fp, 32);
+
+    while( true )
+    {
+        $desc = fread($fp, 32);
+
+        if( strlen($desc) === 0 ) break;
+        if( ord($desc[0]) === 0x0D ) break;
+
+        $fields[] = [
+            'name' => rtrim(substr($desc, 0, 11), "\x00 "),
+            'type' => $desc[11],
+            'length' => ord($desc[16]),
+        ];
+
+    }
+
+    fseek($fp, $header_length);
+
+    $rows = [];
+
+    for( $i = 0; $i < $num_records; $i++ )
+    {
+
+        $raw = fread($fp, $record_length);
+
+        if( !$raw ) break;
+
+        if( $raw[0] === '*' ) continue;
+
+        $pos = 1;
+        $row = [];
+
+        foreach( $fields as $f )
+        {
+
+            $rawVal = substr($raw, $pos, $f['length']);
+
+            switch ($f['type']) {
+
+                // Character fields
+                case 'C':
+                    $val = rtrim($rawVal, "\x00 \t\r\n");
+                    if ($encoding !== 'UTF-8') {
+                        $converted = @iconv($encoding, 'UTF-8//IGNORE', $val);
+                        if ($converted !== false) $val = $converted;
+                    }
+                    $row[$f['name']] = trim($val);
+                    break;
+
+                // Numeric fields (ASCII)
+                case 'N':
+                case 'F':
+                    $val = trim($rawVal);
+                    $row[$f['name']] = ($val === '') ? null : $val;
+                    break;
+
+                // Integer fields (BINARY!)
+                case 'I':
+                    $row[$f['name']] = unpack('V', $rawVal)[1]; // unsigned little-endian 32-bit
+                    break;
+
+                // Currency
+                case 'Y':
+                    $row[$f['name']] = unpack('q', $rawVal)[1] / 10000;
+                    break;
+
+                default:
+                    $row[$f['name']] = trim($rawVal);
+            }
+
+            $pos += $f['length'];
+
+        }
+
+        // filter selected fields
+        $filtered = [];
+
+        foreach( $select_fields as $f )
+        {
+            $filtered[$f] = $row[$f] ?? null;
+        }
+
+        $rows[] = $filtered;
+
+    } //End of FOR LOOP
+
+    fclose($fp);
+
+    return $rows;
+
+} //End of function 'parse_dbf_file()'
+
+
+function map_fields(array $rows, array $map) : array {
+
+    $out = [];
+
+    foreach( $rows as $r )
+    {
+        $item = [];
+
+        foreach( $map as $from => $to )
+        {
+            $item[$to] = $r[$from] ?? null;
+        }
+
+        $out[] = $item;
+
+    }
+
+    return $out;
+
+} //Enf of function 'map_fields()'
+
+
+function generate_sql_inserts( $table, $rows )
+{
+    $sql = "";
+
+    foreach( $rows as $r )
+    {
+        $cols = "`" . implode("`,`", array_keys($r)) . "`";
+
+        $vals = array_map(function($v) {
+            if ($v === null) return "NULL";
+            if (is_int($v) || is_float($v)) return $v;
+            return "'" . str_replace("'", "''", $v) . "'";
+        }, array_values($r));
+
+        $sql .= "INSERT INTO `$table` ($cols) VALUES (" . implode(",", $vals) . ");\n";
+    }
+
+    return $sql;
+
+} //Enf of function 'generate_sql_inserts()'
+
+
+function generate_sql_inserts_batch(string $table, array $rows, int $batchSize = 1000) : string {
+
+    if (empty($rows)) return '';
+
+    $sql = '';
+    $columns = array_keys($rows[0]);
+    $colSql = "`" . implode("`,`", $columns) . "`";
+
+    $batch = [];
+    $count = 0;
+
+    foreach( $rows as $row )
+    {
+
+        $values = [];
+
+        foreach ($columns as $col) 
+        {
+            $v = $row[$col] ?? null;
+
+            if ($v === null) {
+                $values[] = "NULL";
+            } elseif (is_int($v) || is_float($v)) {
+                $values[] = $v;
+            } else {
+                $values[] = "'" . str_replace("'", "''", $v) . "'";
+            }
+        }
+
+        $batch[] = "(" . implode(",", $values) . ")";
+        $count++;
+
+        if ($count % $batchSize === 0) {
+            $sql .= "INSERT INTO `$table` ($colSql) VALUES\n"
+                 . implode(",\n", $batch)
+                 . ";\n\n";
+            $batch = [];
+        }
+
+    }
+
+    // Flush remaining rows
+    if (!empty($batch)) {
+        $sql .= "INSERT INTO `$table` ($colSql) VALUES\n"
+             . implode(",\n", $batch)
+             . ";\n\n";
+    }
+
+    return $sql;
+}
+
+
+function write_php_array_file( $path, $rows )
+{
+
+    $content = "<?php\nreturn " . var_export($rows, true) . ";\n";
+
+    file_put_contents($path, $content);
+
+} //Enf of function 'write_php_array_file()'
+
+
+//---------------- RUN ----------------
+
+try {
+
+    echo "Parsing DBF...<br><br>";
+    $raw = parse_dbf_file($dbf_file, $select_fields, $encoding);
+
+    echo "Mapping fields...<br><br>";
+    $mapped = map_fields($raw, $field_map);
+
+    //Convert some field to integer
+    $int_fields = [
+        'reg',
+        'gender',
+        'district_code',
+        'b_subject',
+        'g_inst_code',
+        'graduation_year',
+    ];
+
+    foreach ($mapped as &$row) {
+        foreach ($int_fields as $f) {
+            if (
+                isset($row[$f]) &&
+                $row[$f] !== null &&
+                $row[$f] !== '' &&
+                is_numeric($row[$f])
+            ) {
+                $row[$f] = (int)$row[$f];
+            } else {
+                $row[$f] = null;
+            }
+        }
+    }
+
+    unset( $row );
+
+    echo "Writing SQL...<br><br>";
+    //file_put_contents($sql_output_file, generate_sql_inserts($table_name, $mapped));
+    file_put_contents(
+        $sql_output_file,
+        generate_sql_inserts_batch($table_name, $mapped, 1000)
+    );
+
+    echo "Writing PHP array...<br><br>";
+    write_php_array_file($php_array_output_file, $mapped);
+
+    echo "Done.<br><br>";
+
+} catch (Exception $e) {
+
+    echo "ERROR: " . $e->getMessage();
+
+} //End of Try-Catch Block

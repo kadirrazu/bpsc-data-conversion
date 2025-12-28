@@ -5,28 +5,38 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-statistics\division.DBF';
+$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\preli_passed_bcs48.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/sql_divisions.sql';
+$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/sql_preli_passed_bcs48.sql';
 
-$php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/array_divisions.php';
+$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/array_preli_passed_bcs48.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "divisions";
+$table_name = "preli_passed";
 
 //Fields of DBF File
 $select_fields = [
-    'DIV_CODE', 'DIV_NAME',
+    'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
+	'B_SUBJECT', 'G_INSTITUT', 'G_INSTITU2', 'G_YEAR',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
 $field_map = [
-    'DIV_CODE' => 'code',
-	'DIV_NAME' => 'name',
+    'USER' => 'user_id',
+	'REG' => 'reg',
+    'NAME' => 'name',
+	'SEX' => 'gender',
+    'DOB' => 'dob',
+    'B_DATE' => 'dob_ddmmyyyy',
+    'DIST_CODE' => 'district_code',
+    'B_SUBJECT' => 'b_subject',
+    'G_INSTITUT' => 'g_inst_code',
+    'G_INSTITU2' => 'g_inst_name',
+    'G_YEAR' => 'graduation_year',
 ];
 
 
@@ -257,16 +267,19 @@ function write_php_array_file( $path, $rows )
 try {
 
     echo "Parsing DBF...<br><br>";
-	
     $raw = parse_dbf_file($dbf_file, $select_fields, $encoding);
 
     echo "Mapping fields...<br><br>";
-	
     $mapped = map_fields($raw, $field_map);
 
     //Convert some field to integer
     $int_fields = [
-        'code',
+        'reg',
+        'gender',
+        'district_code',
+        'b_subject',
+        'g_inst_code',
+        'graduation_year',
     ];
 
     foreach ($mapped as &$row) {
@@ -287,14 +300,13 @@ try {
     unset( $row );
 
     echo "Writing SQL...<br><br>";
-	
+    //file_put_contents($sql_output_file, generate_sql_inserts($table_name, $mapped));
     file_put_contents(
         $sql_output_file,
         generate_sql_inserts_batch($table_name, $mapped, 1000)
     );
 
     echo "Writing PHP array...<br><br>";
-	
     write_php_array_file($php_array_output_file, $mapped);
 
     echo "Done.<br><br>";

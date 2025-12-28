@@ -5,23 +5,23 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\file-io\file-to-convert\for-statistics\reg_all_bcs48.DBF';
+$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\reg_all_bcs44.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/sql_reg_all_bcs48.sql';
+$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_reg_all_bcs44.sql';
 
-$php_array_output_file = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/array_reg_all_bcs48.php';
+$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_reg_all_bcs44.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "registrations";
+$table_name = "registrations_44";
 
 //Fields of DBF File
 $select_fields = [
     'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
-	'B_SUBJECT', 'G_INSTITUT', 'G_INSTITU2', 'G_YEAR',
+	'B_SUBJECT', 'G_INSTITUT', 'G_INSTITU2', 'CAT', 'CADRE_TYPE',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -36,7 +36,8 @@ $field_map = [
     'B_SUBJECT' => 'b_subject',
     'G_INSTITUT' => 'g_inst_code',
     'G_INSTITU2' => 'g_inst_name',
-    'G_YEAR' => 'graduation_year',
+    'CAT' => 'cadre_category',
+    'CADRE_TYPE' => 'cadre_type',
 ];
 
 
@@ -279,7 +280,7 @@ try {
         'district_code',
         'b_subject',
         'g_inst_code',
-        'graduation_year',
+        'cadre_type',
     ];
 
     foreach ($mapped as &$row) {
