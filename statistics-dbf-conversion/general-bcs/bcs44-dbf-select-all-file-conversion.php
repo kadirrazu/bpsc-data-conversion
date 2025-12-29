@@ -5,23 +5,23 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\select_all_bcs44.DBF';
+$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\select_all_bcs44_stat.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_select_all_bcs44.sql';
+$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_select_all_bcs44_stat.sql';
 
-$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_select_all_bcs44.php';
+$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_select_all_bcs44_stat.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "select_all_44";
+$table_name = "final_result_44";
 
 //Fields of DBF File
 $select_fields = [
     'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
-	'B_SUBJECT', 'G_INSTITUT', 'G_INSTITU2', 'CAT', 'CADRE_TYPE',
+	'B_SUBJECT', 'GINS_CODE', 'GINS_NAME', 'CAT', 'CADRE_TYPE', 'CADRE', 'POST_QUOTA', 'TQUOTA',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -34,10 +34,13 @@ $field_map = [
     'B_DATE' => 'dob_ddmmyyyy',
     'DIST_CODE' => 'district_code',
     'B_SUBJECT' => 'b_subject',
-    'G_INSTITUT' => 'g_inst_code',
-    'G_INSTITU2' => 'g_inst_name',
+    'GINS_CODE' => 'g_inst_code',
+    'GINS_NAME' => 'g_inst_name',
     'CAT' => 'cadre_category',
     'CADRE_TYPE' => 'cadre_type',
+    'CADRE' => 'assigned_cadre',
+    'POST_QUOTA' => 'assigned_quota',
+    'TQUOTA' => 'assigned_quota_tech',
 ];
 
 
@@ -263,14 +266,44 @@ function write_php_array_file( $path, $rows )
 } //Enf of function 'write_php_array_file()'
 
 
+function dbf_ddmmyy_to_ymd(?string $value) : ?string
+{
+    $value = trim((string)$value);
+
+    // Must be exactly 6 digits
+    if (!preg_match('/^\d{6}$/', $value)) {
+        return null;
+    }
+
+    $dd = substr($value, 0, 2);
+    $mm = substr($value, 2, 2);
+    $yy = substr($value, 4, 2);
+
+    // Decide century (DBF rule)
+    // 00–29 → 2000–2029
+    // 30–99 → 1930–1999
+    $year = ((int)$yy <= 29) ? (2000 + (int)$yy) : (1900 + (int)$yy);
+
+    // Validate date
+    if (!checkdate((int)$mm, (int)$dd, $year)) {
+        return null;
+    }
+
+    return sprintf('%04d-%02d-%02d', $year, $mm, $dd);
+	
+} //Enf of function 'dbf_ddmmyy_to_ymd()'
+
+
 //---------------- RUN ----------------
 
 try {
 
     echo "Parsing DBF...<br><br>";
+	
     $raw = parse_dbf_file($dbf_file, $select_fields, $encoding);
 
     echo "Mapping fields...<br><br>";
+	
     $mapped = map_fields($raw, $field_map);
 
     //Convert some field to integer
@@ -283,7 +316,8 @@ try {
         'cadre_type',
     ];
 
-    foreach ($mapped as &$row) {
+    //Cast some fields to INTEGER
+	foreach ($mapped as &$row) {
         foreach ($int_fields as $f) {
             if (
                 isset($row[$f]) &&
@@ -299,15 +333,72 @@ try {
     }
 
     unset( $row );
+	
+	//Convert b_date to dob in specific format
+	foreach ($mapped as &$row) {
+		// Convert DDMMYY → YYYY-MM-DD
+		if (!empty($row['dob_ddmmyyyy'])) {
+			$row['dob'] = dbf_ddmmyy_to_ymd($row['dob_ddmmyyyy']);
+		} else {
+			$row['dob'] = null;
+		}
+	}
+
+    unset( $row );
+	
+	//Set cadre_type field as per CAT
+	foreach ($mapped as &$row) {
+		
+		$row['cadre_type'] = NULL;
+		
+		if (!empty($row['cadre_category'])) {
+			if( $row['cadre_category'] === 'GG' ){
+				$row['cadre_type'] = 1;
+			}
+			else if( $row['cadre_category'] === 'TT' ){
+				$row['cadre_type'] = 2;
+			}
+			else if( $row['cadre_category'] === 'GT' ){
+				$row['cadre_type'] = 3;
+			}
+			else if( $row['cadre_category'] === 'T' ){
+				$row['cadre_type'] = 2;
+			}
+			else if( $row['cadre_category'] === 'GN' ){
+				$row['cadre_type'] = 1;
+			}
+		}
+	}
+
+    unset( $row );
+	
+	//Assigned Quota: Filled from GEN or TECH quota
+	foreach ($mapped as &$row) {
+		
+		$qTech = $row['assigned_quota_tech'] ?? '';
+		
+		unset( $row['assigned_quota_tech'] );
+		
+		if (!empty($row['assigned_quota'])) {
+			continue;
+		}
+		else {
+			$row['assigned_quota'] = $qTech;
+		}
+		
+	}
+
+    unset( $row );
 
     echo "Writing SQL...<br><br>";
-    //file_put_contents($sql_output_file, generate_sql_inserts($table_name, $mapped));
+
     file_put_contents(
         $sql_output_file,
         generate_sql_inserts_batch($table_name, $mapped, 1000)
     );
 
     echo "Writing PHP array...<br><br>";
+	
     write_php_array_file($php_array_output_file, $mapped);
 
     echo "Done.<br><br>";
