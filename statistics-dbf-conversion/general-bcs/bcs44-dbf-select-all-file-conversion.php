@@ -362,10 +362,10 @@ try {
 				$row['cadre_type'] = 3;
 			}
 			else if( $row['cadre_category'] === 'T' ){
-				$row['cadre_type'] = 2;
+				$row['cadre_type'] = 3;
 			}
 			else if( $row['cadre_category'] === 'GN' ){
-				$row['cadre_type'] = 1;
+				$row['cadre_type'] = 3;
 			}
 		}
 	}
