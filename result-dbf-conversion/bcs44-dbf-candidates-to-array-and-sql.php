@@ -271,6 +271,60 @@ function generate_sql_inserts( $table, $rows )
 
 } //Enf of function 'generate_sql_inserts()'
 
+
+function generate_sql_inserts_batch(string $table, array $rows, int $batchSize = 1000) : string {
+
+    if (empty($rows)) return '';
+
+    $sql = '';
+    $columns = array_keys($rows[0]);
+    $colSql = "`" . implode("`,`", $columns) . "`";
+
+    $batch = [];
+    $count = 0;
+
+    foreach( $rows as $row )
+    {
+
+        $values = [];
+
+        foreach ($columns as $col) 
+        {
+            $v = $row[$col] ?? null;
+
+            if ($v === null) {
+                $values[] = "NULL";
+            } elseif (is_int($v) || is_float($v)) {
+                $values[] = $v;
+            } else {
+                $values[] = "'" . str_replace("'", "''", $v) . "'";
+            }
+        }
+
+        $batch[] = "(" . implode(",", $values) . ")";
+        $count++;
+
+        if ($count % $batchSize === 0) {
+            $sql .= "INSERT INTO `$table` ($colSql) VALUES\n"
+                 . implode(",\n", $batch)
+                 . ";\n\n";
+            $batch = [];
+        }
+
+    }
+
+    // Flush remaining rows
+    if (!empty($batch)) {
+        $sql .= "INSERT INTO `$table` ($colSql) VALUES\n"
+             . implode(",\n", $batch)
+             . ";\n\n";
+    }
+
+    return $sql;
+	
+} //Enf of function 'generate_sql_inserts_batch()'
+
+
 function write_php_array_file( $path, $rows )
 {
 
@@ -290,9 +344,24 @@ try {
 
     echo "Mapping fields...<br><br>";
     $mapped = map_fields($raw, $field_map);
+	
+	//Set has_quota field as per has_quota
+	foreach ($mapped as &$row) {
+		
+		if (!empty($row['has_quota'])) {
+			if( $row['has_quota'] == '1' ){
+				$row['has_quota'] = 1;
+			}
+		}
+		else{
+			$row['has_quota'] = 0;
+		}
+	}
+
+    unset( $row );
 
     echo "Writing SQL...<br><br>";
-    file_put_contents($sql_output_file, generate_sql_inserts($table_name, $mapped));
+    file_put_contents($sql_output_file, generate_sql_inserts_batch($table_name, $mapped, 1000));
 
     echo "Writing PHP array...<br><br>";
     write_php_array_file($php_array_output_file, $mapped);
