@@ -39,8 +39,7 @@ $field_map = [
     'GINS_NAME' => 'g_inst_name',
     'G_YEAR' => 'graduation_year',
     'CADRE_TYPE' => 'cadre_category',
-	'MERIT_GEN' => 'merit_gen',
-	'P_F' => 'p_f',
+	'MERIT_TECH' => 'merit_tech',
 	'TCADRE' => 'post_name',
 	'QUOTA' => 'quota_status',
 ];
