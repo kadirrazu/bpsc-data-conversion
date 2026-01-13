@@ -5,12 +5,12 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\preli_passed_bcs48.DBF';
+$dbf_file = __DIR__ . '\..\..\..\file-io\file-to-convert\for-statistics\preli_passed_bcs48.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/sql_preli_passed_bcs48.sql';
+$sql_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/sql_preli_passed_bcs48.sql';
 
-$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/array_preli_passed_bcs48.php';
+$php_array_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs48/array_preli_passed_bcs48.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
