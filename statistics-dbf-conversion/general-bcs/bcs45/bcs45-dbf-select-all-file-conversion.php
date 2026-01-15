@@ -5,18 +5,18 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\select_all_bcs44_stat.DBF';
+$dbf_file = __DIR__ . '\..\..\..\file-io\file-to-convert\for-statistics\select_all_bcs45_stat.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_select_all_bcs44_stat.sql';
+$sql_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs45/sql_select_all_bcs45_stat.sql';
 
-$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_select_all_bcs44_stat.php';
+$php_array_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs45/array_select_all_bcs45_stat.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "final_result_44";
+$table_name = "final_result_45";
 
 //Fields of DBF File
 $select_fields = [
@@ -335,16 +335,16 @@ try {
     unset( $row );
 	
 	//Convert b_date to dob in specific format
-	foreach ($mapped as &$row) {
+	/*foreach ($mapped as &$row) {
 		// Convert DDMMYY → YYYY-MM-DD
 		if (!empty($row['dob_ddmmyyyy'])) {
 			$row['dob'] = dbf_ddmmyy_to_ymd($row['dob_ddmmyyyy']);
 		} else {
 			$row['dob'] = null;
 		}
-	}
+	}*/
 
-    unset( $row );
+    //unset( $row );
 	
 	//Set cadre_type field as per CAT
 	foreach ($mapped as &$row) {

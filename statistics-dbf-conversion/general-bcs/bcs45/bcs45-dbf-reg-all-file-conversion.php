@@ -5,18 +5,18 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\reg_all_bcs44_stat.DBF';
+$dbf_file = __DIR__ . '\..\..\..\file-io\file-to-convert\for-statistics\reg_all_bcs45_stat.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_reg_all_bcs44_stat.sql';
+$sql_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs45/sql_reg_all_bcs45_stat.sql';
 
-$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_reg_all_bcs44_stat.php';
+$php_array_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs45/array_reg_all_bcs45_stat.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "registrations_44";
+$table_name = "registrations_45";
 
 //Fields of DBF File
 $select_fields = [

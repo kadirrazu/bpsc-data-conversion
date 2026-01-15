@@ -5,23 +5,23 @@
 ***********************************/
 
 //Input DBF File
-$dbf_file = __DIR__ . '\..\..\file-io\file-to-convert\for-statistics\preli_passed_bcs44_stat.DBF';
+$dbf_file = __DIR__ . '\..\..\..\file-io\file-to-convert\for-statistics\select_all_bcs44_stat.DBF';
 
 //Output SQL-INSERT File
-$sql_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_preli_passed_bcs44_stat.sql';
+$sql_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/sql_select_all_bcs44_stat.sql';
 
-$php_array_output_file = __DIR__ . '/../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_preli_passed_bcs44_stat.php';
+$php_array_output_file = __DIR__ . '/../../../file-io/file-output/dbf-to-file/bcs-statistics/bcs44/array_select_all_bcs44_stat.php';
 
 //Encoding of DBF File
 $encoding = 'CP1252';
 
 //Table name
-$table_name = "preli_passed_44";
+$table_name = "final_result_44";
 
 //Fields of DBF File
 $select_fields = [
     'USER', 'REG', 'NAME', 'SEX', 'DOB', 'B_DATE', 'DIST_CODE',
-	'B_SUBJECT', 'GINS_CODE', 'GINS_NAME', 'CAT', 'CADRE_TYPE',
+	'B_SUBJECT', 'GINS_CODE', 'GINS_NAME', 'CAT', 'CADRE_TYPE', 'CADRE', 'POST_QUOTA', 'TQUOTA',
 ];
 
 //Mapping of DBF File Fields to My-SQL Table Columns
@@ -38,6 +38,9 @@ $field_map = [
     'GINS_NAME' => 'g_inst_name',
     'CAT' => 'cadre_category',
     'CADRE_TYPE' => 'cadre_type',
+    'CADRE' => 'assigned_cadre',
+    'POST_QUOTA' => 'assigned_quota',
+    'TQUOTA' => 'assigned_quota_tech',
 ];
 
 
@@ -343,22 +346,46 @@ try {
 
     unset( $row );
 	
-	//Set cadre category field as per cadre_type
+	//Set cadre_type field as per CAT
 	foreach ($mapped as &$row) {
 		
-		$row['cadre_category'] = NULL;
+		$row['cadre_type'] = NULL;
 		
-		if (!empty($row['cadre_type'])) {
-			if( $row['cadre_type'] === 1 ){
-				$row['cadre_category'] = 'GG';
+		if (!empty($row['cadre_category'])) {
+			if( $row['cadre_category'] === 'GG' ){
+				$row['cadre_type'] = 1;
 			}
-			else if( $row['cadre_type'] === 2 ){
-				$row['cadre_category'] = 'TT';
+			else if( $row['cadre_category'] === 'TT' ){
+				$row['cadre_type'] = 2;
 			}
-			else if( $row['cadre_type'] === 3 ){
-				$row['cadre_category'] = 'GT';
+			else if( $row['cadre_category'] === 'GT' ){
+				$row['cadre_type'] = 3;
+			}
+			else if( $row['cadre_category'] === 'T' ){
+				$row['cadre_type'] = 3;
+			}
+			else if( $row['cadre_category'] === 'GN' ){
+				$row['cadre_type'] = 3;
 			}
 		}
+	}
+
+    unset( $row );
+	
+	//Assigned Quota: Filled from GEN or TECH quota
+	foreach ($mapped as &$row) {
+		
+		$qTech = $row['assigned_quota_tech'] ?? '';
+		
+		unset( $row['assigned_quota_tech'] );
+		
+		if (!empty($row['assigned_quota'])) {
+			continue;
+		}
+		else {
+			$row['assigned_quota'] = $qTech;
+		}
+		
 	}
 
     unset( $row );
