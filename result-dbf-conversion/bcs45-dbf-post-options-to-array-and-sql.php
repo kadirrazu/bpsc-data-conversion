@@ -20,9 +20,9 @@ $cadres_php_array_file    = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-r
 $posts_php_array_file     = __DIR__ . '/../file-io/file-output/dbf-to-file/bcs-result/bcs45/posts/posts_array_bcs45.php';
 
 //MySQL Table Names
-$cadres_table = "cadres_45";
+$cadres_table = "cadres";
 
-$posts_table  = "posts_45";
+$posts_table  = "posts";
 
 //Encoding of DBF File
 $encoding = 'CP1252';
