@@ -120,7 +120,7 @@ function parse_dbf_file(string $path, array $select_fields, string $encoding) : 
 		$phc = (int)($row['PHC'] ?? 0);
 
 		$quota_info = [
-			'CFF' => ($ff === 2 || $ff === 3),
+			'CFF' => ($ff === 2),
 			'EM'  => ($em === 1),
 			'PHC' => (($phc === 1) || ($phc === 2)),
 		];

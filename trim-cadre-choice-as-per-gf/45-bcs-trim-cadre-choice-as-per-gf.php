@@ -189,10 +189,25 @@ function processChoiceList($choiceList, $abbr)
     $found = false;
 
     foreach ($items as $item) {
-        if ($item === $abbr) {
-            $found = true;
-            break;
-        }
+		
+		if( (substr($item, 0, 2) === 'ED') && ((substr($abbr, 0, 2) === 'ED') && $abbr != 'EDPI') )
+		{
+			$found = true;
+			break;
+		}
+		else if( (substr($item, 2, 2) === 'PI') && (substr($abbr, 0, 2) === 'PI') )
+		{			
+			$found = true;
+			break;
+		}
+		else
+		{
+			if ($item === $abbr) {
+				$found = true;
+				break;
+			}
+		}
+        
         $left[] = $item;
     }
 
