@@ -275,7 +275,7 @@ $update_counter = 0;
 foreach( $dataToProcessOutput as $key => $val )
 {
 	 
-	$sql = "UPDATE `candidates_45_with_gf` SET choice_list = '{$val['trimmed_choice_list']}' WHERE user_id = '{$val['user_id']}'";
+	$sql = "UPDATE `candidates_45_with_gf` SET choice_list = '{$val['trimmed_choice_list']}', existing_job_cadre_abbr = '{$val['existing_abbr']}' WHERE user_id = '{$val['user_id']}'";
 	
 	if( $conn->query($sql) === TRUE ) {
 	  $update_counter++;
