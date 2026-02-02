@@ -22,7 +22,7 @@ $table_name = "candidates";
 //Fields of DBF File
 $select_fields = [
     'USER', 'REG', 'NAME', 'CAT', 'DISTRICT', 'SEX',
-    'MERIT_GEN', 'MERIT_TECH', 'ALLM_TECH', 'FF_STATUS', 'TRIBAL', 'PHC', 'APASS_CODE', 'TPASS_CODE',
+    'MERIT_GEN', 'MERIT_TECH', 'ALLM_TECH', 'FF_STATUS', 'TRIBAL', 'PHC', 'FPASS_CODE', 'TPASS_CODE',
 	'has_quota', 'quota_info',
 ];
 
@@ -37,7 +37,7 @@ $field_map = [
     'MERIT_GEN' => 'general_merit_position',
     'MERIT_TECH' => 'technical_merit_position',
     'ALLM_TECH' => 'technical_passed_cadres',
-    'APASS_CODE' => 'choice_list',
+    'FPASS_CODE' => 'choice_list',
     'TPASS_CODE' => 'choice_list_tech',
 	'has_quota' => 'has_quota',
 	'quota_info' => 'quota_info',
